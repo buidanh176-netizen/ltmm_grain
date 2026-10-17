@@ -34,3 +34,18 @@ def bits_to_bytes(bits, lsb_first=True):
 def lfsr_feedback(s):
     """Hàm f: bit mới của LFSR."""
     return s[0] ^ s[13] ^ s[23] ^ s[38] ^ s[51] ^ s[62]
+
+
+# ===== Grain v1: NFSR =====
+
+def nfsr_feedback(b, s0):
+    """Hàm g: bit mới của NFSR (cộng thêm bit s0 của LFSR)."""
+    return (s0 ^ b[0] ^ b[9] ^ b[14] ^ b[21] ^ b[28] ^ b[33] ^ b[37]
+            ^ b[45] ^ b[52] ^ b[60] ^ b[62]
+            ^ (b[63] & b[60]) ^ (b[37] & b[33]) ^ (b[15] & b[9])
+            ^ (b[60] & b[52] & b[45]) ^ (b[33] & b[28] & b[21])
+            ^ (b[63] & b[45] & b[28] & b[9]) ^ (b[60] & b[52] & b[37] & b[33])
+            ^ (b[63] & b[60] & b[21] & b[15])
+            ^ (b[63] & b[60] & b[52] & b[45] & b[37])
+            ^ (b[33] & b[28] & b[21] & b[15] & b[9])
+            ^ (b[52] & b[45] & b[37] & b[33] & b[28] & b[21]))
