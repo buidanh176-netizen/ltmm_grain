@@ -28,3 +28,9 @@ def bits_to_bytes(bits, lsb_first=True):
             byte |= bit << i
         result.append(byte)
     return bytes(result)
+
+# ===== Grain v1: LFSR =====
+
+def lfsr_feedback(s):
+    """Hàm f: bit mới của LFSR."""
+    return s[0] ^ s[13] ^ s[23] ^ s[38] ^ s[51] ^ s[62]
