@@ -1,0 +1,30 @@
+"""
+grain.py - Cài đặt mã dòng Grain v1 và Grain-128.
+
+Ký hiệu (giống README.md):
+    s : LFSR, danh sách bit s[0], s[1], ...
+    b : NFSR, danh sách bit b[0], b[1], ...
+    z : bit keystream
+
+Mỗi nhịp, thanh ghi bỏ bit đầu s[0] và thêm 1 bit mới vào cuối.
+"""
+
+
+# ===== Đổi byte <-> bit (người số 1) =====
+
+def bytes_to_bits(data, lsb_first=True):
+    """b'\\x01' -> [1,0,0,0,0,0,0,0] (LSB-first) hoặc [0,0,0,0,0,0,0,1] (MSB-first)."""
+    order = range(8) if lsb_first else range(7, -1, -1)
+    return [(byte >> i) & 1 for byte in data for i in order]
+
+
+def bits_to_bytes(bits, lsb_first=True):
+    """Ngược lại của bytes_to_bits."""
+    order = list(range(8)) if lsb_first else list(range(7, -1, -1))
+    result = []
+    for k in range(0, len(bits), 8):
+        byte = 0
+        for bit, i in zip(bits[k:k + 8], order):
+            byte |= bit << i
+        result.append(byte)
+    return bytes(result)
