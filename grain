@@ -74,59 +74,17 @@ def output_bit(s: list[int], b: list[int]) -> int:
             ^ h(s[3], s[25], s[46], s[64], b[63]))
 
 
-class GrainV1:
-    """Grain v1: khóa 80 bit (10 byte), IV 64 bit (8 byte)."""
+# ===== HÀM ĐẦU RA, KHỞI TẠO, KEYSTREAM (người số 4) =====
 
-    KEY_BYTES = KEY_BITS // 8
-    IV_BYTES = IV_BITS // 8
-    LSB_FIRST = True
+def h(x0: int, x1: int, x2: int, x3: int, x4: int) -> int:
+    """Hàm lọc Boolean h của Grain v1."""
+    return (x1 ^ x4 ^ (x0 & x3) ^ (x2 & x3) ^ (x3 & x4)
+            ^ (x0 & x1 & x2) ^ (x0 & x2 & x3) ^ (x0 & x2 & x4)
+            ^ (x1 & x2 & x4) ^ (x2 & x3 & x4))
 
-    def __init__(self, key: bytes, iv: bytes, init_clocks: int = INIT_CLOCKS):
-        """`init_clocks` mặc định 160; giảm xuống chỉ để thử nghiệm tấn công."""
-        self.s: list[int] = []
-        self.b: list[int] = []
-        self._load_key_iv(key, iv)
-        self._initialize(init_clocks)
 
-    def _load_key_iv(self, key: bytes, iv: bytes) -> None:
-        """b = key, s = IV + các bit 1 cho đủ độ dài thanh ghi."""
-        name = type(self).__name__
-        if len(key) != self.KEY_BYTES:
-            raise ValueError(f"{name} cần khóa {self.KEY_BYTES} byte, nhận được {len(key)} byte")
-        if len(iv) != self.IV_BYTES:
-            raise ValueError(f"{name} cần IV {self.IV_BYTES} byte, nhận được {len(iv)} byte")
-        self.b = bytes_to_bits(key, self.LSB_FIRST)
-        iv_bits = bytes_to_bits(iv, self.LSB_FIRST)
-        self.s = iv_bits + [1] * (len(self.b) - len(iv_bits))
+def output_bit(s: list[int], b: list[int]) -> int:
+    """z = b1^b2^b4^b10^b31^b43^b56 ^ h(s3, s25, s46, s64, b63)."""
+    return (b[1] ^ b[2] ^ b[4] ^ b[10] ^ b[31] ^ b[43] ^ b[56]
+            ^ h(s[3], s[25], s[46], s[64], b[63]))
 
-    def _output(self) -> int:
-        return output_bit(self.s, self.b)
-
-    def _clock(self, extra: int = 0) -> None:
-        """Dịch cả hai thanh ghi 1 nhịp."""
-        s0 = self.s[0]
-        clock_lfsr(self.s, extra)
-        clock_nfsr(self.b, s0, extra)
-
-    def _initialize(self, clocks: int) -> None:
-        """Chạy `clocks` nhịp, bit z được XOR ngược vào cả LFSR và NFSR."""
-        for _ in range(clocks):
-            self._clock(self._output())
-
-    def next_bit(self) -> int:
-        """Xuất 1 bit keystream."""
-        z = self._output()
-        self._clock()
-        return z
-
-    def keystream(self, n_bytes: int) -> bytes:
-        """Sinh n_bytes byte keystream."""
-        bits = [self.next_bit() for _ in range(8 * n_bytes)]
-        return bits_to_bytes(bits, self.LSB_FIRST)
-
-    def encrypt(self, data: bytes) -> bytes:
-        """Bản mã = bản rõ XOR keystream."""
-        ks = self.keystream(len(data))
-        return bytes(d ^ k for d, k in zip(data, ks))
-
-    decrypt = encrypt
