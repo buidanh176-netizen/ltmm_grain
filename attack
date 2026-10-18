@@ -1,0 +1,24 @@
+import itertools 
+import os 
+import random
+ import sys 
+
+ import grain 
+
+ # ============ 1. Dùng lại khóa + IV ============
+#
+# C1 = P1 ^ K  và  C2 = P2 ^ K  (cùng keystream K)
+# => C1 ^ C2 = P1 ^ P2. Biết P1 thì tính được P2 = C1 ^ C2 ^ P1, không cần khóa.
+
+def xor(a,b) 
+return bytes(x^y for x, y in zip(a,b))  
+
+def iv_reuse_attack():
+    key, iv = os.urandom(10), os.urandom(8)
+    p1 = b"Chuyen khoan 1.000.000 VND den tai khoan A"   # kẻ tấn công biết tin này
+    p2 = b"Mat khau dang nhap moi la: Grain_2026!!!!!"   # tin bí mật
+    c1 = grain.GrainV1(key, iv).encrypt(p1)
+    c2 = grain.GrainV1(key, iv).encrypt(p2)
+
+    recovered = xor(xor(c1, c2), p1)
+    return p2, recovered

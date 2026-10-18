@@ -1,0 +1,55 @@
+﻿"""
+test_grain.py - Kiểm thử (người số 6).
+
+Chạy: pytest -v
+"""
+
+import os
+
+import pytest
+
+import attack
+import demo
+import grain
+
+
+# ============ Test vector chính thức: (khóa, IV, keystream) ============
+
+VECTORS_V1 = [
+    ("00000000000000000000", "0000000000000000", "dee931cf1662a72f77d0"),
+    ("0123456789abcdef1234", "0123456789abcdef", "7f362bd3f7abae203664"),
+]
+
+VECTORS_128 = [
+    ("00000000000000000000000000000000", "000000000000000000000000",
+     "0fd9deefeb6fad437bf43fce35849cfe"),
+    ("0123456789abcdef123456789abcdef0", "0123456789abcdef12345678",
+     "db032aff3788498b57cb894fffb6bb96"),
+]
+
+
+@pytest.mark.parametrize("key, iv, expected", VECTORS_V1)
+def test_grain_v1_vector(key, iv, expected):
+    cipher = grain.GrainV1(bytes.fromhex(key), bytes.fromhex(iv))
+    assert cipher.keystream(len(expected) // 2).hex() == expected
+
+
+@pytest.mark.parametrize("key, iv, expected", VECTORS_128)
+def test_grain128_vector(key, iv, expected):
+    cipher = grain.Grain128(bytes.fromhex(key), bytes.fromhex(iv))
+    assert cipher.keystream(len(expected) // 2).hex() == expected
+
+
+# ============ Đổi byte <-> bit ============
+
+def test_bytes_to_bits():
+    assert grain.bytes_to_bits(b"\x01") == [1, 0, 0, 0, 0, 0, 0, 0]
+    assert grain.bytes_to_bits(b"\x01", lsb_first=False) == [0, 0, 0, 0, 0, 0, 0, 1]
+
+
+def test_bits_to_bytes_reverses_bytes_to_bits():
+    data = os.urandom(32)
+    for lsb_first in [True, False]:
+        bits = grain.bytes_to_bits(data, lsb_first)
+        assert grain.bits_to_bytes(bits, lsb_first) == data
+
