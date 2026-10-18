@@ -37,6 +37,17 @@ def lfsr_feedback(s):
     """Hàm f: bit mới của LFSR."""
     return s[0] ^ s[13] ^ s[23] ^ s[38] ^ s[51] ^ s[62]
 
+def lfsr_feedback(s: list[int]) -> int:
+    """Hàm f: s[i+80] = s[i+62] ^ s[i+51] ^ s[i+38] ^ s[i+23] ^ s[i+13] ^ s[i]."""
+    return s[62] ^ s[51] ^ s[38] ^ s[23] ^ s[13] ^ s[0]
+
+
+def clock_lfsr(s: list[int], extra: int = 0) -> None:
+    """Dịch LFSR 1 nhịp. `extra` là bit XOR thêm vào đầu vào (dùng khi khởi tạo)."""
+    new_bit = lfsr_feedback(s) ^ extra
+    s.pop(0)
+    s.append(new_bit)
+
 
 # ===== Grain v1: NFSR =====
 
@@ -52,39 +63,4 @@ def nfsr_feedback(b, s0):
             ^ (b[33] & b[28] & b[21] & b[15] & b[9])
             ^ (b[52] & b[45] & b[37] & b[33] & b[28] & b[21]))
 
-def clock_nfsr(b: list[int], s0: int, extra: int = 0) -> None:
-    """Dịch NFSR 1 nhịp. `s0` là bit s[i] của LFSR (lấy TRƯỚC khi dịch LFSR)."""
-    new_bit = nfsr_feedback(b, s0) ^ extra
-    b.pop(0)
-    b.append(new_bit)
-
-
-# ===== HÀM ĐẦU RA, KHỞI TẠO, KEYSTREAM (người số 4) =====
-
-def h(x0: int, x1: int, x2: int, x3: int, x4: int) -> int:
-    """Hàm lọc Boolean h của Grain v1."""
-    return (x1 ^ x4 ^ (x0 & x3) ^ (x2 & x3) ^ (x3 & x4)
-            ^ (x0 & x1 & x2) ^ (x0 & x2 & x3) ^ (x0 & x2 & x4)
-            ^ (x1 & x2 & x4) ^ (x2 & x3 & x4))
-
-
-def output_bit(s: list[int], b: list[int]) -> int:
-    """z = b1^b2^b4^b10^b31^b43^b56 ^ h(s3, s25, s46, s64, b63)."""
-    return (b[1] ^ b[2] ^ b[4] ^ b[10] ^ b[31] ^ b[43] ^ b[56]
-            ^ h(s[3], s[25], s[46], s[64], b[63]))
-
-
-# ===== HÀM ĐẦU RA, KHỞI TẠO, KEYSTREAM (người số 4) =====
-
-def h(x0: int, x1: int, x2: int, x3: int, x4: int) -> int:
-    """Hàm lọc Boolean h của Grain v1."""
-    return (x1 ^ x4 ^ (x0 & x3) ^ (x2 & x3) ^ (x3 & x4)
-            ^ (x0 & x1 & x2) ^ (x0 & x2 & x3) ^ (x0 & x2 & x4)
-            ^ (x1 & x2 & x4) ^ (x2 & x3 & x4))
-
-
-def output_bit(s: list[int], b: list[int]) -> int:
-    """z = b1^b2^b4^b10^b31^b43^b56 ^ h(s3, s25, s46, s64, b63)."""
-    return (b[1] ^ b[2] ^ b[4] ^ b[10] ^ b[31] ^ b[43] ^ b[56]
-            ^ h(s[3], s[25], s[46], s[64], b[63]))
 
