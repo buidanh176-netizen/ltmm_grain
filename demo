@@ -1,0 +1,33 @@
+emo.py - Chương trình chạy thử Grain (người số 7).
+
+Chạy: python demo.py   rồi chọn chức năng trong menu.
+"""
+
+import math
+import os
+import sys
+import time
+
+import grain
+
+
+# ============ Nhập khóa, IV ============
+
+def choose_cipher():
+    name = input("Thuật toán (v1/128) [v1]: ").strip() or "v1"
+    return grain.CIPHERS[name]
+
+
+def ask_hex(label, n_bytes):
+    """Hỏi một giá trị hex. Bỏ trống thì sinh ngẫu nhiên."""
+    text = input(f"{label} ({n_bytes} byte hex, Enter = ngẫu nhiên): ").strip()
+    value = bytes.fromhex(text) if text else os.urandom(n_bytes)
+    print(f"  {label} = {value.hex()}")
+    return value
+
+
+def make_cipher():
+    cls = choose_cipher()
+    key = ask_hex("Khóa", cls.KEY_BYTES)
+    iv = ask_hex("IV", cls.IV_BYTES)
+    return cls(key, iv)

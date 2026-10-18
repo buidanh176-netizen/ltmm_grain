@@ -67,3 +67,10 @@ def output_bit(s, b):
 
 
 
+
+
+# def clock(self, extra=0):
+#     """Dịch cả hai thanh ghi 1 nhịp. extra = z khi khởi tạo, = 0 khi sinh keystream."""
+#     new_s, new_b = self.feedback()
+#     self.s = self.s[1:] + [new_s ^ extra]
+#     self.b = self.b[1:] + [new_b ^ extra]
