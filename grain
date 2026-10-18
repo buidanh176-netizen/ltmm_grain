@@ -88,3 +88,10 @@ def output_bit(s: list[int], b: list[int]) -> int:
     return (b[1] ^ b[2] ^ b[4] ^ b[10] ^ b[31] ^ b[43] ^ b[56]
             ^ h(s[3], s[25], s[46], s[64], b[63]))
 
+
+
+# def clock(self, extra=0):
+#     """Dịch cả hai thanh ghi 1 nhịp. extra = z khi khởi tạo, = 0 khi sinh keystream."""
+#     new_s, new_b = self.feedback()
+#     self.s = self.s[1:] + [new_s ^ extra]
+#     self.b = self.b[1:] + [new_b ^ extra]
