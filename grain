@@ -1,0 +1,31 @@
+def output_h(lfsr, nfsr):
+    """Hàm lọc phi tuyến h của Grain v1."""
+    x0 = lfsr[3]
+    x1 = lfsr[25]
+    x2 = lfsr[46]
+    x3 = lfsr[64]
+    x4 = nfsr[63]
+
+    h = (
+        x1 ^ x4
+        ^ (x0 & x3)
+        ^ (x2 & x3)
+        ^ (x3 & x4)
+        ^ (x0 & x1 & x2)
+        ^ (x1 & x2 & x3)
+        ^ (x1 & x2 & x4)
+        ^ (x2 & x3 & x4)
+    )
+
+    return h & 1
+
+
+def output_bit(lfsr, nfsr):
+    """Tính một bit đầu ra của Grain v1."""
+    z = (
+        nfsr[1] ^ nfsr[2] ^ nfsr[4]
+        ^ nfsr[10] ^ nfsr[31] ^ nfsr[43]
+        ^ nfsr[56] ^ output_h(lfsr, nfsr)
+    )
+
+    return z & 1
