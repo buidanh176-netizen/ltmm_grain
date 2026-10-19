@@ -53,6 +53,7 @@ def test_bits_to_bytes_reverses_bytes_to_bits():
         bits = grain.bytes_to_bits(data, lsb_first)
         assert grain.bits_to_bytes(bits, lsb_first) == data
 
+
 # ============ Hàm f, g, h ============
 
 def bits_at(*positions, n=80):
