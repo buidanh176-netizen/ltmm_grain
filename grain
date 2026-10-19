@@ -64,6 +64,27 @@ def output_bit(s, b):
     """Bit keystream z."""
     return (b[1] ^ b[2] ^ b[4] ^ b[10] ^ b[31] ^ b[43] ^ b[56]
             ^ h(s[3], s[25], s[46], s[64], b[63]))
+# ===== Lớp GrainV1 =====
+
+class GrainV1:
+    """Grain v1: khóa 10 byte (80 bit), IV 8 byte (64 bit)."""
+
+    KEY_BYTES = 10
+    IV_BYTES = 8
+    INIT_CLOCKS = 160
+    LSB_FIRST = True
+
+    def __init__(self, key, iv, init_clocks=None):
+        """init_clocks: để trống = dùng số nhịp chuẩn. Chỉ giảm khi thử tấn công."""
+        if len(key) != self.KEY_BYTES:
+            raise ValueError(f"Khóa phải dài {self.KEY_BYTES} byte (đang là {len(key)})")
+        if len(iv) != self.IV_BYTES:
+            raise ValueError(f"IV phải dài {self.IV_BYTES} byte (đang là {len(iv)})")
+
+        # Nạp khóa vào NFSR; nạp IV vào LFSR, các ô còn lại điền bit 1
+        self.b = bytes_to_bits(key, self.LSB_FIRST)
+        iv_bits = bytes_to_bits(iv, self.LSB_FIRST)
+        self.s = iv_bits + [1] * (len(self.b) - len(iv_bits))
 
 
 
