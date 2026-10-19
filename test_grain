@@ -1,5 +1,5 @@
 ﻿"""
-test_grain.py - Kiểm thử (người số 6).
+test_grain.py
 
 Chạy: pytest -v
 """
