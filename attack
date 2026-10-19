@@ -22,3 +22,48 @@ def iv_reuse_attack():
 
     recovered = xor(xor(c1, c2), p1)
     return p2, recovered
+
+# ============ 2. Giảm số nhịp khởi tạo ============
+#
+# Lật 1 bit IV rồi đếm xem bao nhiêu % bit keystream bị đổi.
+# Mã tốt: khoảng 50%. Khởi tạo quá ngắn: thấp hơn nhiều -> phân biệt được với ngẫu nhiên.
+
+def count_ones(data):
+    return sum(bin(byte).count("1") for byte in data)
+
+
+def flip_bit(data, i):
+    """Đảo bit thứ i của data."""
+    result = bytearray(data)
+    result[i // 8] ^= 1 << (i % 8)
+    return bytes(result)
+
+
+def iv_diffusion(init_clocks, trials=200):
+    changed = 0
+    for _ in range(trials):
+        key = os.urandom(10)
+        iv1 = os.urandom(8)
+        iv2 = flip_bit(iv1, random.randrange(64))
+        ks1 = grain.GrainV1(key, iv1, init_clocks).keystream(8)
+        ks2 = grain.GrainV1(key, iv2, init_clocks).keystream(8)
+        changed += count_ones(xor(ks1, ks2))
+    return changed / (trials * 64)
+
+#3.CubeAttack
+# Mỗi bit keystream là một đa thức theo bit khóa k và bit IV v.
+# Chọn vài bit IV (gọi là "cube"), cho chúng chạy qua mọi giá trị 0/1, các bit IV khác = 0,
+# rồi XOR tất cả bit keystream thu được. Kết quả chỉ còn phụ thuộc vào khóa ("superpoly").
+# Nếu superpoly có dạng  c ^ k_a ^ k_b ^ ...  (tuyến tính) thì ta có 1 phương trình về khóa.
+#
+#   Bước 1 (offline): dùng khóa tự chọn để tìm các phương trình như vậy.
+#   Bước 2 (online) : với khóa bí mật, chỉ cần chọn IV và xem keystream -> tính vế phải.
+#   Bước 3          : giải hệ phương trình -> biết được một phần khóa.
+
+CUBE_CLOCKS =32 #số nhịp khởi tạo của grain  rút gọn 
+CUBE_SIZE = 2 # số bit IV cần xét 
+NUM_CUBES = 200 # số cube thử 
+OUT_BITS = 32 # dùng 32 bit keystream đầu tiên -> mỗi cube cho 32 superpoly
+CHECKS = 32 # số khóa ngâu nhiên để kiểm tra superpoly tuyến tính 
+
+
