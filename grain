@@ -86,6 +86,13 @@ class GrainV1:
         iv_bits = bytes_to_bits(iv, self.LSB_FIRST)
         self.s = iv_bits + [1] * (len(self.b) - len(iv_bits))
 
+     # Khởi tạo: chạy nhiều nhịp, XOR bit z vào cả hai thanh ghi, không xuất ra
+        if init_clocks is None:
+            init_clocks = self.INIT_CLOCKS
+        for _ in range(init_clocks):
+            self.clock(extra=self.output())
+
+
 # def feedback(self):
 #      """Bit mới cho (LFSR, NFSR)."""
 #       return lfsr_feedback(self.s), nfsr_feedback(self.b, self.s[0])
