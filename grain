@@ -12,7 +12,7 @@ Mỗi nhịp, thanh ghi bỏ bit đầu s[0] và thêm 1 bit mới vào cuối.
 """
 
 
-# ===== Đổi byte <-> bit (người số 1) =====
+# ===== Đổi byte <-> bit =====
 
 def bytes_to_bits(data, lsb_first=True):
     """b'\\x01' -> [1,0,0,0,0,0,0,0] (LSB-first) hoặc [0,0,0,0,0,0,0,1] (MSB-first)."""
@@ -51,7 +51,7 @@ def nfsr_feedback(b, s0):
             ^ (b[63] & b[60] & b[52] & b[45] & b[37])
             ^ (b[33] & b[28] & b[21] & b[15] & b[9])
             ^ (b[52] & b[45] & b[37] & b[33] & b[28] & b[21]))
-# ===== Grain v1: hàm đầu ra (người số 4) =====
+# ===== Grain v1: hàm đầu ra =====
 
 def h(x0, x1, x2, x3, x4):
     """Hàm lọc h (5 bit vào, 1 bit ra)."""
@@ -86,9 +86,12 @@ class GrainV1:
         iv_bits = bytes_to_bits(iv, self.LSB_FIRST)
         self.s = iv_bits + [1] * (len(self.b) - len(iv_bits))
 
+# def feedback(self):
+#      """Bit mới cho (LFSR, NFSR)."""
+#       return lfsr_feedback(self.s), nfsr_feedback(self.b, self.s[0])
 
-
-
+#  def output(self):
+#      return output_bit(self.s, self.b)
 
 # def clock(self, extra=0):
 #     """Dịch cả hai thanh ghi 1 nhịp. extra = z khi khởi tạo, = 0 khi sinh keystream."""
