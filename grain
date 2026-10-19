@@ -100,13 +100,13 @@ class GrainV1:
 #  def output(self):
 #      return output_bit(self.s, self.b)
 
-# def clock(self, extra=0):
-#     """Dịch cả hai thanh ghi 1 nhịp. extra = z khi khởi tạo, = 0 khi sinh keystream."""
-#     new_s, new_b = self.feedback()
-#     self.s = self.s[1:] + [new_s ^ extra]
-#     self.b = self.b[1:] + [new_b ^ extra]
+    def clock(self, extra=0):
+        """Dịch cả hai thanh ghi 1 nhịp. extra = z khi khởi tạo, = 0 khi sinh keystream."""
+        new_s, new_b = self.feedback()
+        self.s = self.s[1:] + [new_s ^ extra]
+        self.b = self.b[1:] + [new_b ^ extra]
 
-def next_bit(self):
+    def next_bit(self):
         """Lấy 1 bit keystream."""
         z = self.output()
         self.clock()
@@ -122,3 +122,9 @@ def next_bit(self):
         return bytes(d ^ k for d, k in zip(data, ks))
 
     decrypt = encrypt
+
+# ===== Grain-128  =====
+
+def lfsr128_feedback(s):
+    return s[0] ^ s[7] ^ s[38] ^ s[70] ^ s[81] ^ s[96]
+
