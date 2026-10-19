@@ -105,3 +105,20 @@ class GrainV1:
 #     new_s, new_b = self.feedback()
 #     self.s = self.s[1:] + [new_s ^ extra]
 #     self.b = self.b[1:] + [new_b ^ extra]
+
+def next_bit(self):
+        """Lấy 1 bit keystream."""
+        z = self.output()
+        self.clock()
+        return z
+
+    def keystream(self, n_bytes):
+        bits = [self.next_bit() for _ in range(8 * n_bytes)]
+        return bits_to_bytes(bits, self.LSB_FIRST)
+
+    def encrypt(self, data):
+        """Bản mã = bản rõ XOR keystream. Giải mã làm y hệt."""
+        ks = self.keystream(len(data))
+        return bytes(d ^ k for d, k in zip(data, ks))
+
+    decrypt = encrypt
