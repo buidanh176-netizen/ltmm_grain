@@ -53,3 +53,38 @@ def test_bits_to_bytes_reverses_bytes_to_bits():
         bits = grain.bytes_to_bits(data, lsb_first)
         assert grain.bits_to_bytes(bits, lsb_first) == data
 
+# ============ Hàm f, g, h ============
+
+def bits_at(*positions, n=80):
+    """Danh sách n bit, bằng 1 tại các vị trí cho trước."""
+    return [1 if i in positions else 0 for i in range(n)]
+
+
+def test_lfsr_feedback():
+    for tap in [0, 13, 23, 38, 51, 62]:
+        assert grain.lfsr_feedback(bits_at(tap)) == 1
+    assert grain.lfsr_feedback(bits_at(1)) == 0    # 1 không phải tap
+
+
+def test_nfsr_feedback():
+    assert grain.nfsr_feedback(bits_at(), s0=1) == 1      # chỉ có s0
+    assert grain.nfsr_feedback(bits_at(62), s0=0) == 1    # số hạng tuyến tính b62
+    # b63 = b60 = 1: các số hạng có mặt là b60 và b63*b60  ->  1 ^ 1 = 0
+    assert grain.nfsr_feedback(bits_at(63, 60), s0=0) == 0
+
+
+def test_h_examples():
+    assert grain.h(0, 0, 0, 0, 0) == 0
+    assert grain.h(0, 1, 0, 0, 0) == 1    # x1
+    assert grain.h(1, 0, 0, 1, 0) == 1    # x0x3
+    assert grain.h(1, 1, 1, 1, 1) == 0
+
+
+def test_h_is_balanced():
+    """h cho ra bit 1 với đúng một nửa (16/32) số đầu vào."""
+    ones = 0
+    for v in range(32):
+        x = [(v >> i) & 1 for i in range(5)]
+        ones += grain.h(*x)
+    assert ones == 16
+
