@@ -31,3 +31,27 @@ def make_cipher():
     key = ask_hex("Khóa", cls.KEY_BYTES)
     iv = ask_hex("IV", cls.IV_BYTES)
     return cls(key, iv)
+# ============ Mã hóa / giải mã ============
+
+def encrypt_text():
+    cipher = make_cipher()
+    text = input("Bản rõ: ")
+    print("Bản mã (hex):", cipher.encrypt(text.encode("utf-8")).hex())
+
+
+def decrypt_text():
+    cipher = make_cipher()
+    data = bytes.fromhex(input("Bản mã (hex): "))
+    print("Bản rõ:", cipher.decrypt(data).decode("utf-8", errors="replace"))
+
+
+def crypt_file():
+    """Mã hóa và giải mã file giống hệt nhau (đều là XOR với keystream)."""
+    cipher = make_cipher()
+    src = input("File đầu vào: ").strip()
+    dst = input("File đầu ra : ").strip()
+    with open(src, "rb") as f:
+        data = f.read()
+    with open(dst, "wb") as f:
+        f.write(cipher.encrypt(data))
+    print(f"Đã ghi {len(data)} byte vào {dst}")
