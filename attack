@@ -66,4 +66,46 @@ NUM_CUBES = 200 # số cube thử
 OUT_BITS = 32 # dùng 32 bit keystream đầu tiên -> mỗi cube cho 32 superpoly
 CHECKS = 32 # số khóa ngâu nhiên để kiểm tra superpoly tuyến tính 
 
+def cube_sum(cube, key_bits):
+    """XOR keystream (OUT_BITS bit đầu) trên mọi giá trị của các bit IV trong cube."""
+    key = grain.bits_to_bytes(key_bits)
+    total = [0] * OUT_BITS
+    for values in itertools.product([0, 1], repeat=len(cube)):
+        iv_bits = [0] * 64
+        for pos, v in zip(cube, values):
+            iv_bits[pos] = v
+        cipher = grain.GrainV1(key, grain.bits_to_bytes(iv_bits), CUBE_CLOCKS)
+        for t in range(OUT_BITS):
+            total[t] ^= cipher.next_bit()
+    return total
 
+def find_equations():
+    """Bước 1. Trả về danh sách (cube, t, các bit khóa, hằng số)."""
+    zero_key = [0] * 80
+    equations = []
+    found = set()
+    for _ in range(NUM_CUBES):
+        cube = sorted(random.sample(range(64), CUBE_SIZE))
+        const = cube_sum(cube, zero_key)
+
+        # Nếu tuyến tính thì: k_j có mặt trong phương trình <=> superpoly(e_j) != superpoly(0)
+        with_bit = [cube_sum(cube, [int(i == j) for i in range(80)]) for j in range(80)]
+        variables = [{j for j in range(80) if with_bit[j][t] != const[t]} for t in range(OUT_BITS)]
+
+        # Kiểm tra với nhiều khóa ngẫu nhiên: superpoly phải đúng bằng  const ^ XOR(k_j)
+        ok = [True] * OUT_BITS
+        for _ in range(CHECKS):
+            key = [random.randrange(2) for _ in range(80)]
+            real = cube_sum(cube, key)
+            for t in range(OUT_BITS):
+                predicted = const[t] ^ (sum(key[j] for j in variables[t]) % 2)
+                if real[t] != predicted:
+                    ok[t] = False
+
+        for t in range(OUT_BITS):
+            eq = frozenset(variables[t])
+            if ok[t] and eq and eq not in found:
+                found.add(eq)
+                equations.append((cube, t, eq, const[t]))
+    return equations
+    
