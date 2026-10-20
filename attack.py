@@ -1,3 +1,11 @@
+
+"""
+attack.py - Minh họa 3 tấn công lên Grain v1 (người số 5).
+
+Chạy: python attack.py   (khoảng 15 giây)
+"""
+
+
 import itertools 
 import os 
 import random
@@ -133,3 +141,64 @@ def solve(equations):
         pivots[p] = (variables, rhs)
     return pivots
 
+def cube_attack():
+    equations = find_equations()
+
+    # Bước 2: khóa bí mật. Kẻ tấn công chỉ chọn IV và quan sát keystream (trong cube_sum).
+    secret_key = os.urandom(10)
+    secret_bits = grain.bytes_to_bits(secret_key)
+    sums = {}
+    system = []
+    for cube, t, variables, const in equations:
+        if tuple(cube) not in sums:
+            sums[tuple(cube)] = cube_sum(cube, secret_bits)
+        system.append((variables, sums[tuple(cube)][t] ^ const))
+
+    # Bước 3
+    pivots = solve(system)
+    known_bits = {p: rhs for p, (variables, rhs) in pivots.items() if variables == {p}}
+
+    # Đối chiếu với khóa thật (chỉ để kiểm chứng)
+    correct = sum(sum(secret_bits[j] for j in variables) % 2 == rhs
+                  for variables, rhs in pivots.values())
+
+    return {
+        "equations": len(equations),
+        "independent": len(pivots),
+        "correct": correct,
+        "known_bits": known_bits,
+        "secret": secret_key,
+    }
+
+
+# ============ Chạy tất cả ============
+
+def main():
+    sys.stdout.reconfigure(encoding="utf-8")   # để console Windows in được tiếng Việt
+    random.seed(1)
+
+    print("=== 1. Dùng lại khóa + IV ===")
+    p2, recovered = iv_reuse_attack()
+    print("Tin bí mật     :", p2.decode())
+    print("Tin khôi phục  :", recovered.decode())
+    print("Thành công     :", recovered == p2)
+    print()
+
+    print("=== 2. Lật 1 bit IV: bao nhiêu % bit keystream bị đổi? (lý tưởng 50%) ===")
+    for clocks in [0, 16, 32, 48, 64, 96, 160]:
+        print(f"{clocks:4} nhịp khởi tạo: {iv_diffusion(clocks):6.1%}")
+    print()
+
+    print(f"=== 3. Cube attack lên Grain v1 rút gọn còn {CUBE_CLOCKS} nhịp ===")
+    print("Đang tính (khoảng 15 giây)...")
+    r = cube_attack()
+    bits = ", ".join(f"k{j}={v}" for j, v in sorted(r["known_bits"].items()))
+    print("Số phương trình tìm được :", r["equations"], f"({r['independent']} phương trình độc lập)")
+    print("Đúng với khóa thật       :", f"{r['correct']}/{r['independent']}")
+    print("Khóa bí mật              :", r["secret"].hex())
+    print("Bit khóa biết chắc chắn  :", bits or "(không có)")
+    print("Không gian vét cạn       :", f"2^80 -> 2^{80 - r['independent']}")
+
+
+if __name__ == "__main__":
+    main()
