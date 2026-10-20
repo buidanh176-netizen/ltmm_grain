@@ -108,4 +108,28 @@ def find_equations():
                 found.add(eq)
                 equations.append((cube, t, eq, const[t]))
     return equations
-    
+
+
+def solve(equations):
+    """Khử Gauss trên GF(2). Mỗi phương trình là (tập bit khóa, vế phải).
+
+    Trả về {bit: (tập bit khóa, vế phải)}, mỗi phương trình còn lại có 1 bit "đại diện" riêng.
+    """
+    pivots = {}
+    for variables, rhs in equations:
+        variables = set(variables)
+        # Loại các bit đại diện đã có ra khỏi phương trình mới
+        for p, (p_vars, p_rhs) in pivots.items():
+            if p in variables:
+                variables ^= p_vars
+                rhs ^= p_rhs
+        if not variables:
+            continue   # phương trình thừa (suy ra được từ các phương trình trước)
+        p = min(variables)
+        # Loại bit p ra khỏi các phương trình cũ
+        for q, (q_vars, q_rhs) in pivots.items():
+            if p in q_vars:
+                pivots[q] = (q_vars ^ variables, q_rhs ^ rhs)
+        pivots[p] = (variables, rhs)
+    return pivots
+
