@@ -9,17 +9,17 @@ Chạy: python attack.py   (khoảng 15 giây)
 import itertools 
 import os 
 import random
- import sys 
+import sys 
 
- import grain 
+import grain 
 
- # ============ 1. Dùng lại khóa + IV ============
+# ============ 1. Dùng lại khóa + IV ============
 #
 # C1 = P1 ^ K  và  C2 = P2 ^ K  (cùng keystream K)
 # => C1 ^ C2 = P1 ^ P2. Biết P1 thì tính được P2 = C1 ^ C2 ^ P1, không cần khóa.
 
-def xor(a,b) 
-return bytes(x^y for x, y in zip(a,b))  
+def xor(a,b):
+    return bytes(x^y for x, y in zip(a,b))  
 
 def iv_reuse_attack():
     key, iv = os.urandom(10), os.urandom(8)
@@ -30,6 +30,7 @@ def iv_reuse_attack():
 
     recovered = xor(xor(c1, c2), p1)
     return p2, recovered
+
 
 # ============ 2. Giảm số nhịp khởi tạo ============
 #
@@ -86,6 +87,7 @@ def cube_sum(cube, key_bits):
         for t in range(OUT_BITS):
             total[t] ^= cipher.next_bit()
     return total
+
 
 def find_equations():
     """Bước 1. Trả về danh sách (cube, t, các bit khóa, hằng số)."""
