@@ -95,7 +95,7 @@ class GrainV1:
 
     def feedback(self):
       """Bit mới cho (LFSR, NFSR)."""
-        return lfsr_feedback(self.s), nfsr_feedback(self.b, self.s[0])
+      return lfsr_feedback(self.s), nfsr_feedback(self.b, self.s[0])
 
     def output(self):
       return output_bit(self.s, self.b)

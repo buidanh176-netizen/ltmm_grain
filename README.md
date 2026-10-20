@@ -114,3 +114,31 @@ Khởi tạo: `b = key` (128 bit), `s[0..95] = IV`, `s[96..127] = 1`, chạy 256
 | 5 | _(tên)_ | `attack.py`: `iv_reuse_attack`, `iv_diffusion`, `cube_attack`, `solve` |
 | 6 | _(tên)_ | `test_grain.py` |
 | 7 | _(tên)_ | `demo.py`: menu, mã hóa/giải mã, `benchmark`, `frequency_test`, `runs_test` |
+
+
+## 8. Cách chạy
+
+Cần Python 3.10 trở lên.
+
+```bash
+pip install pytest           # để chạy kiểm thử
+pip install cryptography     # (tùy chọn) để so sánh tốc độ với AES-CTR, ChaCha20
+
+pytest -v                    # chạy 31 test
+python attack.py             # minh họa 3 tấn công (~15 giây)
+python demo.py               # mở menu demo
+```
+
+Menu của `demo.py`:
+
+```
+===== DEMO MÃ DÒNG GRAIN =====
+1. Mã hóa văn bản
+2. Giải mã văn bản
+3. Mã hóa / giải mã file
+4. Đo tốc độ
+5. Kiểm tra ngẫu nhiên
+0. Thoát
+```
+
+Khi được hỏi khóa và IV, có thể bỏ trống để chương trình tự sinh ngẫu nhiên (nhớ chép lại để giải mã). Ví dụ: chọn `1`, thuật toán `v1`, khóa `0123456789abcdef1234`, IV `0123456789abcdef`, bản rõ `Xin chào Grain` sẽ cho bản mã `275f45f394c36d8059446892dc43c1`.
