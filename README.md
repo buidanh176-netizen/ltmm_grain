@@ -107,10 +107,43 @@ Khởi tạo: `b = key` (128 bit), `s[0..95] = IV`, `s[96..127] = 1`, chạy 256
 
 | # | Thành viên | Phụ trách |
 |---|---|---|
-| 1 | _(tên)_ | Trưởng nhóm: `README.md`; `grain.py`: `bytes_to_bits`, `bits_to_bytes` |
-| 2 | _(tên)_ | `grain.py`: `lfsr_feedback`, `lfsr128_feedback` |
-| 3 | _(tên)_ | `grain.py`: `nfsr_feedback`, `nfsr128_feedback` |
-| 4 | _(tên)_ | `grain.py`: `h`, `output_bit`, `output_bit128`, lớp `GrainV1`, `Grain128` |
-| 5 | _(tên)_ | `attack.py`: `iv_reuse_attack`, `iv_diffusion`, `cube_attack`, `solve` |
-| 6 | _(tên)_ | `test_grain.py` |
-| 7 | _(tên)_ | `demo.py`: menu, mã hóa/giải mã, `benchmark`, `frequency_test`, `runs_test` |
+| 1 | Bùi_Thọ_Danh | Trưởng nhóm: `README.md`; `grain.py`: `bytes_to_bits`, `bits_to_bytes` |
+| 2 | Phạm_Quang_Vinh | `grain.py`: `lfsr_feedback`, `lfsr128_feedback` |
+| 3 | Đào_Quang_Huy | `grain.py`: `nfsr_feedback`, `nfsr128_feedback` |
+| 4 | Đào_Tất_Hiệp | `grain.py`: `h`, `output_bit`, `output_bit128`, lớp `GrainV1`, `Grain128` |
+| 5 | Nguyễn_Phúc_Huy | `attack.py`: `iv_reuse_attack`, `iv_diffusion`, `cube_attack`, `solve` |
+| 6 | Chu_Đức_Huy | `test_grain.py` |
+| 7 | Nguyễn_Tiến_Đạt | `demo.py`: menu, mã hóa/giải mã, `benchmark`, `frequency_test`, `runs_test` |
+
+## 7. Quy tắc làm việc
+
+- Mỗi người commit **ít nhất 1 lần mỗi ngày**, trước 22h.
+- Chạy `git pull --rebase` trước khi bắt đầu code và trước khi push.
+- Trong `grain.py`, chỉ sửa khối có tên mình.
+- Code dở dang vẫn commit, với tiền tố `wip:`.
+- Kiểm tra commit trong ngày: `git shortlog -sn --since="00:00"`.
+
+## 8. Cách chạy
+
+Cần Python 3.10 trở lên.
+
+```bash
+pip install pytest           # để chạy kiểm thử
+pip install cryptography     # (tùy chọn) để so sánh tốc độ với AES-CTR, ChaCha20
+
+pytest -v                    # chạy 31 test
+python attack.py             # minh họa 3 tấn công (~15 giây)
+python demo.py               # mở menu demo
+```
+
+Menu của `demo.py`:
+
+```
+===== DEMO MÃ DÒNG GRAIN =====
+1. Mã hóa văn bản
+2. Giải mã văn bản
+3. Mã hóa / giải mã file
+4. Đo tốc độ
+5. Kiểm tra ngẫu nhiên
+0. Thoát
+```

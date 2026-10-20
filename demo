@@ -31,3 +31,123 @@ def make_cipher():
     key = ask_hex("Khóa", cls.KEY_BYTES)
     iv = ask_hex("IV", cls.IV_BYTES)
     return cls(key, iv)
+# ============ Mã hóa / giải mã ============
+
+def encrypt_text():
+    cipher = make_cipher()
+    text = input("Bản rõ: ")
+    print("Bản mã (hex):", cipher.encrypt(text.encode("utf-8")).hex())
+
+
+def decrypt_text():
+    cipher = make_cipher()
+    data = bytes.fromhex(input("Bản mã (hex): "))
+    print("Bản rõ:", cipher.decrypt(data).decode("utf-8", errors="replace"))
+
+
+def crypt_file():
+    """Mã hóa và giải mã file giống hệt nhau (đều là XOR với keystream)."""
+    cipher = make_cipher()
+    src = input("File đầu vào: ").strip()
+    dst = input("File đầu ra : ").strip()
+    with open(src, "rb") as f:
+        data = f.read()
+    with open(dst, "wb") as f:
+        f.write(cipher.encrypt(data))
+    print(f"Đã ghi {len(data)} byte vào {dst}")
+    # ============ Đo tốc độ ============
+
+def benchmark(n_bytes=20_000):
+    print(f"Sinh {n_bytes} byte keystream:")
+    for name, cls in grain.CIPHERS.items():
+        cipher = cls(os.urandom(cls.KEY_BYTES), os.urandom(cls.IV_BYTES))
+        start = time.perf_counter()
+        cipher.keystream(n_bytes)
+        seconds = time.perf_counter() - start
+        print(f"  Grain {name:<4}: {n_bytes / seconds / 1024:8.1f} KB/s")
+
+    # So sánh với AES và ChaCha20 (cần: pip install cryptography)
+    try:
+        from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+    except ImportError:
+        print("  (Cài thư viện cryptography để so sánh với AES-CTR và ChaCha20)")
+        return
+    data = bytes(2_000_000)
+    others = {
+        "AES-CTR": Cipher(algorithms.AES(os.urandom(16)), modes.CTR(os.urandom(16))),
+        "ChaCha20": Cipher(algorithms.ChaCha20(os.urandom(32), os.urandom(16)), mode=None),
+    }
+    for name, c in others.items():
+        start = time.perf_counter()
+        c.encryptor().update(data)
+        seconds = time.perf_counter() - start
+        print(f"  {name:<10}: {len(data) / seconds / 1024:8.1f} KB/s")
+
+
+# ============ Kiểm tra ngẫu nhiên (NIST SP 800-22) ============
+
+def frequency_test(bits):
+    """Số bit 0 và 1 có gần bằng nhau không? Trả về p-value (>= 0.01 là đạt)."""
+    n = len(bits)
+    s = sum(1 if bit else -1 for bit in bits)
+    return math.erfc(abs(s) / math.sqrt(2 * n))
+
+
+def runs_test(bits):
+    """Số "đoạn" bit giống nhau liên tiếp có hợp lý không? Trả về p-value (>= 0.01 là đạt)."""
+    n = len(bits)
+    pi = sum(bits) / n                       # tỉ lệ bit 1
+    if abs(pi - 0.5) >= 2 / math.sqrt(n):    # quá lệch thì không cần thử tiếp
+        return 0.0
+    runs = 1 + sum(bits[i] != bits[i + 1] for i in range(n - 1))
+    expected = 2 * n * pi * (1 - pi)
+    return math.erfc(abs(runs - expected) / (2 * math.sqrt(2 * n) * pi * (1 - pi)))
+
+
+def randomness(n_bytes=12_500):
+    print(f"Kiểm tra {n_bytes * 8} bit keystream:")
+    for name, cls in grain.CIPHERS.items():
+        cipher = cls(os.urandom(cls.KEY_BYTES), os.urandom(cls.IV_BYTES))
+        bits = grain.bytes_to_bits(cipher.keystream(n_bytes))
+        for test_name, test in [("Frequency", frequency_test), ("Runs", runs_test)]:
+            p = test(bits)
+            result = "ĐẠT" if p >= 0.01 else "KHÔNG ĐẠT"
+            print(f"  Grain {name:<4} {test_name:<10}: p = {p:.4f}  {result}")
+
+
+# ============ Menu ============
+
+MENU = [
+    ("Mã hóa văn bản", encrypt_text),
+    ("Giải mã văn bản", decrypt_text),
+    ("Mã hóa / giải mã file", crypt_file),
+    ("Đo tốc độ", benchmark),
+    ("Kiểm tra ngẫu nhiên", randomness),
+]
+
+
+def main():
+    sys.stdout.reconfigure(encoding="utf-8")   # để console Windows in/nhập được tiếng Việt
+    sys.stdin.reconfigure(encoding="utf-8")
+    while True:
+        print("\n===== DEMO MÃ DÒNG GRAIN =====")
+        for i, (title, _) in enumerate(MENU, 1):
+            print(f"{i}. {title}")
+        print("0. Thoát")
+        choice = input("Chọn: ").strip()
+        if choice == "0":
+            break
+        if not choice.isdigit() or not 1 <= int(choice) <= len(MENU):
+            print("Lựa chọn không hợp lệ")
+            continue
+        try:
+            MENU[int(choice) - 1][1]()
+        except (ValueError, KeyError, OSError) as e:
+            print("Lỗi:", e)
+
+
+if __name__ == "__main__":
+    try:
+        main()
+    except (KeyboardInterrupt, EOFError):   # Ctrl+C hoặc hết dữ liệu nhập
+        pass
