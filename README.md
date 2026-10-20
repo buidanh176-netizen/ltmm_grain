@@ -140,5 +140,3 @@ Menu của `demo.py`:
 5. Kiểm tra ngẫu nhiên
 0. Thoát
 ```
-
-Khi được hỏi khóa và IV, có thể bỏ trống để chương trình tự sinh ngẫu nhiên (nhớ chép lại để giải mã). Ví dụ: chọn `1`, thuật toán `v1`, khóa `0123456789abcdef1234`, IV `0123456789abcdef`, bản rõ `Xin chào Grain` sẽ cho bản mã `275f45f394c36d8059446892dc43c1`.
