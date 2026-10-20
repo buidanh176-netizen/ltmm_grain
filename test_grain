@@ -89,3 +89,36 @@ def test_h_is_balanced():
         ones += grain.h(*x)
     assert ones == 16
 
+
+    # ============ Mã hóa / giải mã ============
+
+@pytest.mark.parametrize("cls", [grain.GrainV1, grain.Grain128])
+@pytest.mark.parametrize("data", [b"", b"a", b"Xin chao Grain", os.urandom(1000)])
+def test_decrypt_gives_back_plaintext(cls, data):
+    key, iv = os.urandom(cls.KEY_BYTES), os.urandom(cls.IV_BYTES)
+    ciphertext = cls(key, iv).encrypt(data)
+    assert len(ciphertext) == len(data)
+    assert cls(key, iv).decrypt(ciphertext) == data
+
+
+def test_different_iv_gives_different_keystream():
+    key = os.urandom(10)
+    ks1 = grain.GrainV1(key, bytes(8)).keystream(16)
+    ks2 = grain.GrainV1(key, b"\x01" + bytes(7)).keystream(16)
+    assert ks1 != ks2
+
+
+def test_keystream_continues_between_calls():
+    key, iv = os.urandom(10), os.urandom(8)
+    c = grain.GrainV1(key, iv)
+    assert c.keystream(4) + c.keystream(4) == grain.GrainV1(key, iv).keystream(8)
+
+
+@pytest.mark.parametrize("cls, key_len, iv_len", [
+    (grain.GrainV1, 9, 8), (grain.GrainV1, 10, 7),
+    (grain.Grain128, 10, 12), (grain.Grain128, 16, 8),
+])
+def test_wrong_key_or_iv_length(cls, key_len, iv_len):
+    with pytest.raises(ValueError):
+        cls(bytes(key_len), bytes(iv_len))
+
