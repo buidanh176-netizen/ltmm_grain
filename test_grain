@@ -122,3 +122,47 @@ def test_wrong_key_or_iv_length(cls, key_len, iv_len):
     with pytest.raises(ValueError):
         cls(bytes(key_len), bytes(iv_len))
 
+# ============ attack.py ============
+
+def test_iv_reuse_attack():
+    p2, recovered = attack.iv_reuse_attack()
+    assert recovered == p2
+
+
+def test_iv_diffusion():
+    assert attack.iv_diffusion(0, trials=50) < 0.3             # khởi tạo 0 nhịp: yếu
+    assert 0.4 < attack.iv_diffusion(160, trials=50) < 0.6     # đủ 160 nhịp: ~50%
+
+
+def test_solve():
+    # k0 ^ k1 = 1  và  k1 = 1   =>   k0 = 0, k1 = 1
+    pivots = attack.solve([({0, 1}, 1), ({1}, 1)])
+    assert pivots == {0: ({0}, 0), 1: ({1}, 1)}
+
+
+def test_cube_attack_equations_are_correct(monkeypatch):
+    # Chạy bản nhỏ cho nhanh
+    monkeypatch.setattr(attack, "CUBE_CLOCKS", 16)
+    monkeypatch.setattr(attack, "CUBE_SIZE", 1)
+    monkeypatch.setattr(attack, "NUM_CUBES", 20)
+    r = attack.cube_attack()
+    assert r["independent"] > 0
+    assert r["correct"] == r["independent"]
+
+
+# ============ demo.py ============
+
+def test_frequency_test():
+    assert demo.frequency_test([0, 1] * 500) > 0.99    # cân bằng hoàn hảo
+    assert demo.frequency_test([1] * 1000) < 0.01      # toàn bit 1
+
+
+def test_runs_test():
+    assert demo.runs_test([0, 1] * 500) < 0.01             # đổi bit liên tục
+    assert demo.runs_test([0] * 500 + [1] * 500) < 0.01    # 2 đoạn dài
+
+
+def test_keystream_looks_random():
+    bits = grain.bytes_to_bits(grain.GrainV1(os.urandom(10), os.urandom(8)).keystream(2000))
+    assert demo.frequency_test(bits) >= 0.001
+    assert demo.runs_test(bits) >= 0.001
