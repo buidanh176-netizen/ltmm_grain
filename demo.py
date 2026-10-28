@@ -1,4 +1,4 @@
-emo.py - Chương trình chạy thử Grain (người số 7).
+"""demo.py - Chương trình chạy thử Grain (người số 7).
 
 Chạy: python demo.py   rồi chọn chức năng trong menu.
 """
